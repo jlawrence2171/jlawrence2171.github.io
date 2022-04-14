@@ -31,3 +31,14 @@ header {
 #contact {
   background-color: rgb(31, 86, 86);
 }
+
+#diamonds {
+  left: 0px;
+  top: 50%;
+  background-color: blueviolet;
+  position: fixed;
+}
+
+.diamond {
+  padding: 5px;
+}
