@@ -2,6 +2,8 @@ console.log("script.js loaded");
 
 let isScrolling = false;  //if animated and scrolling
 
+//todo: try requestAnimationFrame() or css keyframe animation instead of setInterval()
+
 /**
  * Scrolls from current scroll position to targetId.
  * Does not work while already doing animated scrolling.
