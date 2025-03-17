@@ -1,7 +1,12 @@
-# jlawrence2171.github.io
+# Jefferson Lawrence - Portfolio
 
-Hi Welcome to my Page,
+Welcome to my professional portfolio showcasing my transition from IT to software development. This site demonstrates my journey in creating solutions that improve quality of life through technology.
 
-This is to mark my journey from IT to solve complex and interesting problems using Code. My major goal is to create systems that give people more breeding room within their Work or Life.
+**Features:**
 
-https://jlawrence2171.github.io
+- Smooth scroll navigation
+- Responsive design
+- Project showcase
+- Skills visualization
+
+Visit the live site: [https://jlawrence2171.github.io](https://jlawrence2171.github.io)

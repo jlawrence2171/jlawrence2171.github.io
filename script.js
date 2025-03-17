@@ -1,49 +1,35 @@
-console.log("script.js loaded");
-
-let isScrolling = false;  //if animated and scrolling
-
-//todo: try requestAnimationFrame() or css keyframe animation instead of setInterval()
-
-/**
- * Scrolls from current scroll position to targetId.
- * Does not work while already doing animated scrolling.
- * @param {String} targetId Assumed valid id. No need to put "#". Ex: portfolio
- */
 function animateScrollTo(targetId) {
-  if (isScrolling) {
-    console.log("already scrolling..");
-    return;
-  }
+  if (isScrolling) return;
+
+  const target = document.getElementById(targetId);
+  if (!target) return;
 
   isScrolling = true;
+  const startPosition = window.pageYOffset;
+  const targetPosition = target.offsetTop;
+  const distance = targetPosition - startPosition;
+  const duration = 800;
+  let startTime = null;
 
-  console.log(`scrolling to ${targetId}`);
+  function animation(currentTime) {
+    if (!startTime) startTime = currentTime;
+    const timeElapsed = currentTime - startTime;
+    const run = ease(timeElapsed, startPosition, distance, duration);
+    window.scrollTo(0, run);
 
-  let currentScrollPos = window.pageYOffset || document.documentElement.scrollTop;
-
-  let targetScrollPos = $("#" + targetId).offset().top;
-
-  let distance = Math.abs(targetScrollPos - currentScrollPos);
-  let numSlices = 100;
-  let distSlice = distance / numSlices;
-
-  //we need to go up. instead of down.
-  if (targetScrollPos < currentScrollPos)
-    distSlice = -distSlice;
-
-  //scroll to target, in numSlices
-  let scrollInterval = setInterval(function () {
-    currentScrollPos += distSlice;
-    $("html").scrollTop(currentScrollPos);
-
-    //no more slices left
-    if (numSlices == 0) {
-      $("html").scrollTop(targetScrollPos);
-      clearInterval(scrollInterval);
+    if (timeElapsed < duration) {
+      requestAnimationFrame(animation);
+    } else {
       isScrolling = false;
     }
+  }
 
-    numSlices--;
-  }, 5);
+  function ease(t, b, c, d) {
+    t /= d / 2;
+    if (t < 1) return (c / 2) * t * t * t + b;
+    t -= 2;
+    return (c / 2) * (t * t * t + 2) + b;
+  }
 
-};
+  requestAnimationFrame(animation);
+}

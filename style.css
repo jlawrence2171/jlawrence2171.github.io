@@ -1,44 +1,37 @@
-html {
-  height: 100%;
-}
-
-body {
-  height: 100%;
-}
-
-header {
-  position: fixed;
-  width: 100%;
-}
-
-.content {
-  min-height: 100%;
-  padding-top: 80px;
-}
-
-#intro {
-  background-color: aliceblue;
-}
-
-#portfolio {
-  background-color: aqua;
-}
-
-#skills {
-  background-color: rgb(74, 146, 18);
-}
-
-#contact {
-  background-color: rgb(31, 86, 86);
-}
-
+/* Improved diamond navigation */
 #diamonds {
-  left: 0px;
-  top: 50%;
-  background-color: blueviolet;
   position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  background: transparent;
 }
 
 .diamond {
-  padding: 5px;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  margin: 15px 0;
+  transform: rotate(45deg);
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid #fff;
+  transition: all 0.3s ease;
+}
+
+.diamond:hover {
+  background: rgba(138, 43, 226, 0.8);
+  transform: rotate(45deg) scale(1.2);
+}
+
+/* Full viewport sections */
+.content {
+  height: 100vh;
+  padding: 80px 20px 20px;
+  scroll-snap-align: start;
+}
+
+body {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
 }
