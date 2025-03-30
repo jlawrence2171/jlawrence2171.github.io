@@ -1,7 +1,7 @@
 body {
   font-family: Arial, sans-serif;
   scroll-behavior: smooth;
-  background: url("GYny.gif") no-repeat center center fixed;
+  background: url("assets/GYny.gif") no-repeat center center fixed;
   background-size: cover;
 }
 
