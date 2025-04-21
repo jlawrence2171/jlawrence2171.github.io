@@ -1,14 +1,144 @@
-<div class="project-card">
-  <h3>📉 Golden/Death Cross Detector</h3>
-  <p>Enter a stock ticker to visualize trend indicators.</p>
-  <input type="text" id="tickerInput" placeholder="e.g. AAPL" />
-  <button onclick="generateChart()">Generate Chart</button>
-  <div id="chartContainer"></div>
-  <div id="message"></div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Golden & Death Cross with D3.js</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        background: #f0f2f5;
+        padding: 20px;
+      }
+      #chart {
+        margin-top: 20px;
+      }
+      .line {
+        fill: none;
+        stroke-width: 2px;
+      }
+      .close-line {
+        stroke: steelblue;
+      }
+      .ma50-line {
+        stroke: orange;
+      }
+      .ma200-line {
+        stroke: green;
+      }
+      .trend {
+        font-size: 1.2em;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>📊 Golden & Death Cross (D3.js)</h2>
+    <p>Enter Stock Symbol (e.g. AAPL, QQQ, MSFT):</p>
+    <input type="text" id="symbol" placeholder="AAPL" />
+    <button onclick="fetchData()">Analyze</button>
 
-*In no event will we be liable for any loss or damage including without
-limitation, indirect or consequential loss or damage, or any loss or damage
-whatsoever arising from loss of data or profits arising out of, or in connection
-with, the use of this website. By accessing this website we assume you accept
-these terms and conditions in full.*
+    <div class="trend" id="trendStatus">Trend: <strong>None</strong></div>
+    <svg id="chart" width="800" height="400"></svg>
+
+    <p style="font-size: 0.8em; margin-top: 20px; color: gray">
+      Disclaimer: This tool is for educational use only. No financial liability
+      assumed.
+    </p>
+
+    <script>
+      async function fetchData() {
+        const symbol = document.getElementById("symbol").value.toUpperCase();
+        const apiKey = "demo"; // Replace with your real Alpha Vantage API key
+        const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&outputsize=full&apikey=${apiKey}`;
+
+        const res = await fetch(url);
+        const json = await res.json();
+        const raw = json["Time Series (Daily)"];
+        if (!raw) return alert("Invalid symbol or API limit hit.");
+
+        let data = Object.keys(raw).map((d) => ({
+          date: new Date(d),
+          close: +raw[d]["4. close"],
+        }));
+
+        data.sort((a, b) => a.date - b.date);
+        data = data.slice(-300);
+
+        // Calculate MA50 and MA200
+        data.forEach((d, i) => {
+          d.ma50 =
+            i >= 49 ? d3.mean(data.slice(i - 49, i + 1), (x) => x.close) : null;
+          d.ma200 =
+            i >= 199
+              ? d3.mean(data.slice(i - 199, i + 1), (x) => x.close)
+              : null;
+        });
+
+        // Determine current trend
+        const last = data[data.length - 1];
+        const prev = data[data.length - 2];
+        let trend = "Neutral";
+        if (last.ma50 > last.ma200 && prev.ma50 <= prev.ma200)
+          trend = "Golden Cross";
+        else if (last.ma50 < last.ma200 && prev.ma50 >= prev.ma200)
+          trend = "Death Cross";
+        else if (last.ma50 > last.ma200) trend = "Golden Cross";
+        else if (last.ma50 < last.ma200) trend = "Death Cross";
+        document.getElementById(
+          "trendStatus"
+        ).innerHTML = `Trend: <strong>${trend}</strong>`;
+
+        drawChart(data);
+      }
+
+      function drawChart(data) {
+        const svg = d3.select("#chart");
+        svg.selectAll("*").remove();
+        const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+        const width = +svg.attr("width") - margin.left - margin.right;
+        const height = +svg.attr("height") - margin.top - margin.bottom;
+        const g = svg
+          .append("g")
+          .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const x = d3.scaleTime().range([0, width]);
+        const y = d3.scaleLinear().range([height, 0]);
+
+        x.domain(d3.extent(data, (d) => d.date));
+        y.domain([d3.min(data, (d) => d.close), d3.max(data, (d) => d.close)]);
+
+        const line = (key, className) =>
+          d3
+            .line()
+            .defined((d) => d[key] != null)
+            .x((d) => x(d.date))
+            .y((d) => y(d[key]));
+
+        // Axes
+        g.append("g")
+          .attr("transform", `translate(0,${height})`)
+          .call(d3.axisBottom(x));
+        g.append("g").call(d3.axisLeft(y));
+
+        // Price Line
+        g.append("path")
+          .datum(data)
+          .attr("class", "line close-line")
+          .attr("d", line("close"));
+
+        // MA50 Line
+        g.append("path")
+          .datum(data)
+          .attr("class", "line ma50-line")
+          .attr("d", line("ma50"));
+
+        // MA200 Line
+        g.append("path")
+          .datum(data)
+          .attr("class", "line ma200-line")
+          .attr("d", line("ma200"));
+      }
+    </script>
+  </body>
+</html>
