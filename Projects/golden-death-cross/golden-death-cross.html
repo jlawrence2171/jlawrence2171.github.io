@@ -1,30 +1,14 @@
-<section class="project">
-  <h3>📉 Golden/Death Cross Indicator - QQQ</h3>
-  <img
-    src="/assets/golden_death_cross_qqq.png"
-    alt="Golden Death Cross chart for QQQ"
-    style="max-width: 100%; border-radius: 8px"
-  />
-  <p>
-    This Python script fetches historical stock data for QQQ and detects
-    <strong>Golden Cross</strong> and <strong>Death Cross</strong> patterns
-    using 50-day and 200-day moving averages. These crossover points can signal
-    bullish or bearish trends.
-  </p>
-  <ul>
-    <li>
-      ✅ Libraries: <code>yfinance</code>, <code>pandas</code>,
-      <code>matplotlib</code>
-    </li>
-    <li>📅 Date Range: 2020–Present</li>
-    <li>
-      📈 Highlights crossovers on the chart using green ▲ and red ▼ markers
-    </li>
-  </ul>
-</section>
+<div class="project-card">
+  <h3>📉 Golden/Death Cross Detector</h3>
+  <p>Enter a stock ticker to visualize trend indicators.</p>
+  <input type="text" id="tickerInput" placeholder="e.g. AAPL" />
+  <button onclick="generateChart()">Generate Chart</button>
+  <div id="chartContainer"></div>
+  <div id="message"></div>
+</div>
 
-In no event will we be liable for any loss or damage including without
+*In no event will we be liable for any loss or damage including without
 limitation, indirect or consequential loss or damage, or any loss or damage
 whatsoever arising from loss of data or profits arising out of, or in connection
 with, the use of this website. By accessing this website we assume you accept
-these terms and conditions in full.
+these terms and conditions in full.*
