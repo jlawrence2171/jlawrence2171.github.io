@@ -49,21 +49,20 @@
     <script>
       async function fetchData() {
         const symbol = document.getElementById("symbol").value.toUpperCase();
-        const apiKey = "demo"; // Replace with your real Alpha Vantage API key
-        const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&outputsize=full&apikey=${apiKey}`;
+        const apiKey = "f3903a04980140dc97c941c68a3daea9"; // Replace with your Twelve Data API key
+        const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&apikey=${apiKey}&outputsize=300`;
 
         const res = await fetch(url);
         const json = await res.json();
-        const raw = json["Time Series (Daily)"];
+        const raw = json["values"];
         if (!raw) return alert("Invalid symbol or API limit hit.");
 
-        let data = Object.keys(raw).map((d) => ({
-          date: new Date(d),
-          close: +raw[d]["4. close"],
+        let data = raw.map((d) => ({
+          date: new Date(d.datetime),
+          close: +d.close,
         }));
 
         data.sort((a, b) => a.date - b.date);
-        data = data.slice(-300);
 
         // Calculate MA50 and MA200
         data.forEach((d, i) => {
