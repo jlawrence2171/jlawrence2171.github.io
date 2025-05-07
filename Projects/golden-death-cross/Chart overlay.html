@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Golden & Death Cross with D3.js</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        background: #f0f2f5;
+        padding: 20px;
+      }
+      #chart {
+        margin-top: 20px;
+      }
+      .line {
+        fill: none;
+        stroke-width: 2px;
+      }
+      .close-line {
+        stroke: steelblue;
+      }
+      .ma50-line {
+        stroke: orange;
+      }
+      .ma200-line {
+        stroke: green;
+      }
+      .bb-mid,
+      .bb-upper,
+      .bb-lower {
+        fill: none;
+        stroke-width: 1.5px;
+      }
+      .bb-mid {
+        stroke: #666;
+        stroke-dasharray: 4, 2;
+      }
+      .bb-upper,
+      .bb-lower {
+        stroke: #999;
+      }
+      .trend {
+        font-size: 1.2em;
+        margin-top: 10px;
+      }
+      .bb-upper {
+        stroke: red;
+        stroke-width: 2px;
+        fill: none;
+      }
+
+      .bb-lower {
+        stroke: blue;
+        stroke-width: 2px;
+        fill: none;
+      }
+
+      .bb-mid {
+        stroke: gray;
+        stroke-dasharray: 4, 2;
+        stroke-width: 1.5px;
+        fill: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>📊 Golden & Death Cross (D3.js)</h2>
+    <p>Enter Stock Symbol (e.g. AAPL, QQQ, MSFT):</p>
+    <input type="text" id="symbol" placeholder="AAPL" />
+    <button onclick="fetchData()">Analyze</button>
+    <button onclick="toggleBollinger()">Toggle Bollinger Bands</button>
+
+    <div class="trend" id="trendStatus">Trend: <strong>None</strong></div>
+    <div class="trend" id="currentPrice">
+      Current Price: <strong>N/A</strong>
+    </div>
+    <div id="bollingerValues" style="margin-top: 8px; font-size: 0.9em"></div>
+    <svg id="chart" width="800" height="400"></svg>
+
+    <p style="font-size: 0.8em; margin-top: 20px; color: gray">
+      Disclaimer: This tool is for educational use only. No financial liability
+      assumed.
+    </p>
+
+    <script>
+      let bollingerVisible = true;
+
+      async function fetchData() {
+        const symbol = document.getElementById("symbol").value.toUpperCase();
+        const apiKey = "f3903a04980140dc97c941c68a3daea9"; // Replace with your own API key
+        const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&apikey=${apiKey}&outputsize=300`;
+
+        const res = await fetch(url);
+        const json = await res.json();
+        const raw = json["values"];
+        if (!raw) return alert("Invalid symbol or API limit hit.");
+
+        let data = raw.map((d) => ({
+          date: new Date(d.datetime),
+          close: +d.close,
+        }));
+
+        data.sort((a, b) => a.date - b.date);
+
+        data.forEach((d, i) => {
+          d.ma50 =
+            i >= 49 ? d3.mean(data.slice(i - 49, i + 1), (x) => x.close) : null;
+          d.ma200 =
+            i >= 199
+              ? d3.mean(data.slice(i - 199, i + 1), (x) => x.close)
+              : null;
+
+          if (i >= 19) {
+            const slice = data.slice(i - 19, i + 1);
+            const mean = d3.mean(slice, (x) => x.close);
+            const stddev = Math.sqrt(
+              d3.mean(slice.map((x) => Math.pow(x.close - mean, 2)))
+            );
+            d.bbMid = mean;
+            d.bbUpper = mean + 2 * stddev;
+            d.bbLower = mean - 2 * stddev;
+          } else {
+            d.bbMid = d.bbUpper = d.bbLower = null;
+          }
+        });
+
+        const last = data[data.length - 1];
+        const prev = data[data.length - 2];
+        let trend = "Neutral";
+        if (last.ma50 > last.ma200 && prev.ma50 <= prev.ma200)
+          trend = "Golden Cross";
+        else if (last.ma50 < last.ma200 && prev.ma50 >= prev.ma200)
+          trend = "Death Cross";
+        else if (last.ma50 > last.ma200) trend = "Golden Cross";
+        else if (last.ma50 < last.ma200) trend = "Death Cross";
+
+        document.getElementById(
+          "trendStatus"
+        ).innerHTML = `Trend: <strong>${trend}</strong>`;
+        document.getElementById(
+          "currentPrice"
+        ).innerHTML = `Current Price: <strong>$${last.close.toFixed(
+          2
+        )}</strong>`;
+
+        document.getElementById("bollingerValues").innerHTML = `
+      <strong>Bollinger Bands:</strong><br>
+      Upper: ${last.bbUpper?.toFixed(2) || "N/A"}<br>
+      Mid: ${last.bbMid?.toFixed(2) || "N/A"}<br>
+      Lower: ${last.bbLower?.toFixed(2) || "N/A"}
+    `;
+
+        drawChart(data);
+      }
+
+      function drawChart(data) {
+        const svg = d3.select("#chart");
+        svg.selectAll("*").remove();
+        const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+        const width = +svg.attr("width") - margin.left - margin.right;
+        const height = +svg.attr("height") - margin.top - margin.bottom;
+        const g = svg
+          .append("g")
+          .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const x = d3.scaleTime().range([0, width]);
+        const y = d3.scaleLinear().range([height, 0]);
+
+        x.domain(d3.extent(data, (d) => d.date));
+        y.domain([
+          d3.min(data, (d) =>
+            Math.min(d.close, d.bbLower != null ? d.bbLower : d.close)
+          ),
+          d3.max(data, (d) =>
+            Math.max(d.close, d.bbUpper != null ? d.bbUpper : d.close)
+          ),
+        ]);
+
+        const line = (key) =>
+          d3
+            .line()
+            .defined((d) => d[key] != null)
+            .x((d) => x(d.date))
+            .y((d) => y(d[key]));
+
+        // Axes
+        g.append("g")
+          .attr("transform", `translate(0,${height})`)
+          .call(d3.axisBottom(x));
+        g.append("g").call(d3.axisLeft(y));
+
+        g.append("path")
+          .datum(data)
+          .attr("class", "line close-line")
+          .attr("d", line("close"));
+
+        g.append("path")
+          .datum(data)
+          .attr("class", "line ma50-line")
+          .attr("d", line("ma50"));
+
+        g.append("path")
+          .datum(data)
+          .attr("class", "line ma200-line")
+          .attr("d", line("ma200"));
+
+        const bbGroup = g.append("g").attr("id", "bollingerGroup");
+
+        bbGroup
+          .append("path")
+          .datum(data)
+          .attr("class", "line bb-mid")
+          .attr("d", line("bbMid"))
+          .attr("stroke", "gray")
+          .attr("stroke-dasharray", "4,2");
+
+        bbGroup
+          .append("path")
+          .datum(data)
+          .attr("class", "line bb-upper")
+          .attr("d", line("bbUpper"))
+          .attr("stroke", "red");
+
+        bbGroup
+          .append("path")
+          .datum(data)
+          .attr("class", "line bb-lower")
+          .attr("d", line("bbLower"))
+          .attr("stroke", "blue");
+
+        bbGroup.style("display", bollingerVisible ? "block" : "none");
+      }
+
+      function toggleBollinger() {
+        bollingerVisible = !bollingerVisible;
+        d3.select("#bollingerGroup").style(
+          "display",
+          bollingerVisible ? "block" : "none"
+        );
+      }
+    </script>
+  </body>
+</html>
