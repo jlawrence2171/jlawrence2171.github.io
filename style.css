@@ -23,7 +23,7 @@ body::before {
 
 /* Ensure content isn't hidden behind fixed navbar */
 section {
-  padding-top: 80px;
+  padding-top: 10px;
 }
 
 /* Navbar border color */

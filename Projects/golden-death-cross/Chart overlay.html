@@ -8,10 +8,9 @@
       body {
         font-family: sans-serif;
         background: #f0f2f5;
-        padding: 20px;
       }
       #chart {
-        margin-top: 20px;
+        margin-top: 10px;
       }
       .line {
         fill: none;
@@ -67,6 +66,17 @@
   <body>
     <h2>📊 Golden & Death Cross (D3.js)</h2>
     <p>Enter Stock Symbol (e.g. AAPL, QQQ, MSFT):</p>
+    <p
+      style="
+        font-size: 1.8em;
+        text-underline-position: auto;
+        margin-top: 10px;
+        color: rgb(0, 0, 0);
+      "
+    >
+      Disclaimer: This tool is for educational use only. No financial liability
+      assumed.
+    </p>
     <input type="text" id="symbol" placeholder="AAPL" />
     <button onclick="fetchData()">Analyze</button>
     <button onclick="toggleBollinger()">Toggle Bollinger Bands</button>
@@ -75,13 +85,10 @@
     <div class="trend" id="currentPrice">
       Current Price: <strong>N/A</strong>
     </div>
+    //this is where the charts appear
     <div id="bollingerValues" style="margin-top: 8px; font-size: 0.9em"></div>
     <svg id="chart" width="800" height="400"></svg>
-
-    <p style="font-size: 0.8em; margin-top: 20px; color: gray">
-      Disclaimer: This tool is for educational use only. No financial liability
-      assumed.
-    </p>
+    <svg id="rsiChart" width="800" height="200"></svg>
 
     <script>
       let bollingerVisible = true;
@@ -152,6 +159,59 @@
     `;
 
         drawChart(data);
+        drawRSIChart(data);
+      }
+      function drawRSIChart(data) {
+        const svg = d3.select("#rsiChart");
+        svg.selectAll("*").remove();
+        const margin = { top: 10, right: 20, bottom: 20, left: 50 };
+        const width = +svg.attr("width") - margin.left - margin.right;
+        const height = +svg.attr("height") - margin.top - margin.bottom;
+        const g = svg
+          .append("g")
+          .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const x = d3.scaleTime().range([0, width]);
+        const y = d3.scaleLinear().domain([0, 100]).range([height, 0]);
+
+        x.domain(d3.extent(data, (d) => d.date));
+
+        const rsiLine = d3
+          .line()
+          .defined((d) => d.rsi != null)
+          .x((d) => x(d.date))
+          .y((d) => y(d.rsi));
+
+        // Axes
+        g.append("g")
+          .attr("transform", `translate(0,${height})`)
+          .call(d3.axisBottom(x).ticks(5));
+        g.append("g").call(d3.axisLeft(y).ticks(5));
+
+        // Overbought and Oversold lines
+        g.append("line")
+          .attr("x1", 0)
+          .attr("x2", width)
+          .attr("y1", y(70))
+          .attr("y2", y(70))
+          .attr("stroke", "red")
+          .attr("stroke-dasharray", "4");
+
+        g.append("line")
+          .attr("x1", 0)
+          .attr("x2", width)
+          .attr("y1", y(30))
+          .attr("y2", y(30))
+          .attr("stroke", "green")
+          .attr("stroke-dasharray", "4");
+
+        // RSI Line
+        g.append("path")
+          .datum(data)
+          .attr("fill", "none")
+          .attr("stroke", "purple")
+          .attr("stroke-width", 2)
+          .attr("d", rsiLine);
       }
 
       function drawChart(data) {
@@ -231,7 +291,7 @@
 
         bbGroup.style("display", bollingerVisible ? "block" : "none");
       }
-
+      drawRSIChart(data);
       function toggleBollinger() {
         bollingerVisible = !bollingerVisible;
         d3.select("#bollingerGroup").style(
