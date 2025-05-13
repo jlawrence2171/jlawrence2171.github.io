@@ -21,6 +21,14 @@ body::before {
   z-index: -1;
 }
 
+h2 {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 10;
+  padding-bottom: 10;
+  line-height: 1.2;
+}
+
 /* Ensure content isn't hidden behind fixed navbar */
 section {
   padding-top: 10px;
