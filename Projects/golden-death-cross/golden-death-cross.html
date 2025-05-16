@@ -47,10 +47,10 @@
     </p>
 
     <script>
+      require("dotenv").config();
       async function fetchData() {
         const symbol = document.getElementById("symbol").value.toUpperCase();
-        const apiKey = "f3903a04980140dc97c941c68a3daea9"; // Replace with your Twelve Data API key
-        const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&apikey=${apiKey}&outputsize=300`;
+        const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&apikey=${GCDapiKey}&outputsize=300`;
 
         const res = await fetch(url);
         const json = await res.json();

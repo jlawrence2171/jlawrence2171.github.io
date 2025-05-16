@@ -91,12 +91,12 @@
     <svg id="rsiChart" width="800" height="200"></svg>
 
     <script>
+      require("dotenv").config();
       let bollingerVisible = true;
 
       async function fetchData() {
         const symbol = document.getElementById("symbol").value.toUpperCase();
-        const apiKey = "f3903a04980140dc97c941c68a3daea9"; // Replace with your own API key
-        const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&apikey=${apiKey}&outputsize=300`;
+        const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&apikey=${GDCapiKey}&outputsize=300`;
 
         const res = await fetch(url);
         const json = await res.json();
