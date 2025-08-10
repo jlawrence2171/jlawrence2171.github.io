@@ -96,6 +96,16 @@
 
       async function fetchData() {
         const symbol = document.getElementById("symbol").value.toUpperCase();
+
+        async function fetchData() {
+          const symbol = document.getElementById("symbol").value.toUpperCase();
+
+          const json = await res.json();
+          const raw = json["values"];
+          if (!raw) return alert("Invalid symbol or API limit hit.");
+
+          // ... rest of your processing logic ...
+        }
         const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&apikey=${GDCapiKey}&outputsize=300`;
 
         const res = await fetch(url);
